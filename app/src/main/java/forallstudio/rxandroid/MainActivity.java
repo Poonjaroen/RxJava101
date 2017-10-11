@@ -3,268 +3,192 @@ package forallstudio.rxandroid;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Completable;
-import io.reactivex.CompletableObserver;
-import io.reactivex.Maybe;
-import io.reactivex.MaybeObserver;
+import forallstudio.rxandroid.entity.Policy;
+import forallstudio.rxandroid.network.IMockUpService;
+import forallstudio.rxandroid.network.MockUpClient;
+import forallstudio.rxandroid.viewmodel.PolicyViewModel;
 import io.reactivex.Observable;
-import io.reactivex.ObservableEmitter;
-import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.Observer;
-import io.reactivex.Single;
-import io.reactivex.SingleObserver;
+import io.reactivex.ObservableSource;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Action;
+import io.reactivex.functions.BiConsumer;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
+import io.reactivex.functions.Predicate;
+import io.reactivex.observables.GroupedObservable;
+import io.reactivex.schedulers.Schedulers;
+import io.realm.Realm;
+import io.realm.RealmConfiguration;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView textView;
-
-    private CompositeDisposable disposable = new CompositeDisposable();
+    private Realm realm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        textView = (TextView) findViewById(R.id.textView);
-        findViewById(R.id.button1).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d("----->", "Clicked Me !!!");
-            }
-        });
-        //justOperator();
-        //fromCallableOperator();
-        //fromIterableOperator();
-        //createOperator();
-        //intervalOperator();
-        //timeOperator();
-        //rangeOperator();
-        //repeatOperator();
+        initRealm();
+        realm = Realm.getDefaultInstance();
+
+        //netWorkAndCached();
+        //testGroupBy();
+        test1();
     }
 
-    public void disposable() {
-        Disposable subscribe = Observable.just("1").subscribe();
-        Disposable subscribe1 = Observable.just("2").subscribe();
+    private void netWorkAndCached() {
+        IMockUpService client = MockUpClient.createService();
 
-        disposable.add(subscribe);
-        disposable.add(subscribe1);
-
-        // cancel subscribe
-        disposable.clear();
-    }
-
-    public void justOperator() {
-        Observable.just(getCustomerNames());
-    }
-
-    public void fromCallableOperator() {
-        Observable.fromCallable(new Callable<List<String>>() {
-            @Override
-            public List<String> call() throws Exception {
-                return getCustomerNames();
-            }
-        });
-    }
-
-    public void fromIterableOperator() {
-        Observable.fromIterable(getCustomerNames());
-    }
-
-    private void createOperator() {
-        Observable.create(new ObservableOnSubscribe<String>() {
-            @Override
-            public void subscribe(@NonNull ObservableEmitter<String> emitter) throws Exception {
-                try {
-                    for (int i = 0; i < 10; i += 2) {
-                        emitter.onNext(String.valueOf(i));
-                    }
-                    emitter.onComplete();
-                } catch (Exception e) {
-                    emitter.onError(e);
-                }
-            }
-        });
-    }
-
-    private void intervalOperator() {
-        Observable.interval(1, TimeUnit.SECONDS);
-    }
-
-    private void timeOperator() {
-        Observable.timer(5, TimeUnit.SECONDS);
-    }
-
-    private void rangeOperator() {
-        Observable.range(10, 5);
-    }
-
-    private void repeatOperator() {
-        Observable.just("Repeat").repeat(5);
-    }
-
-    public List<String> getCustomerNames() {
-        List<String> customerNames = Arrays.asList(
-                "Wasit",
-                "Tana",
-                "Tanakit",
-                "Siwasit",
-                "Banyong",
-                "Ved",
-                "Nantawan",
-                "Pawinee",
-                "Varut",
-                "Ratchanon",
-                "Arnon");
-        return customerNames;
-    }
-
-    public void createObserver() {
-
-        Observer observer = new Observer() {
-            @Override
-            public void onSubscribe(@NonNull Disposable d) {
-
-            }
-
-            @Override
-            public void onNext(@NonNull Object o) {
-
-            }
-
-            @Override
-            public void onError(@NonNull Throwable e) {
-
-            }
-
-            @Override
-            public void onComplete() {
-
-            }
-        };
-
-        Disposable subscribe = Observable.just("", "")
-                .doOnNext(new Consumer<String>() {
+        Observable<Policy> netWorkObservable = client.getAllPolicy()
+                .delay(3, TimeUnit.SECONDS)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<List<Policy>, ObservableSource<Policy>>() {
                     @Override
-                    public void accept(String s) throws Exception {
-
+                    public ObservableSource<Policy> apply(@NonNull List<Policy> policies) throws Exception {
+                        return Observable.fromIterable(policies);
                     }
                 })
-                .doOnError(new Consumer<Throwable>() {
+                .flatMap(new Function<Policy, ObservableSource<Policy>>() {
                     @Override
-                    public void accept(Throwable throwable) throws Exception {
+                    public ObservableSource<Policy> apply(@NonNull Policy policy) throws Exception {
+                        return Observable.just(writeToRealm(policy));
+                    }
+                });
 
+
+        List<Policy> allPolicyFromRealm = getAllPolicyFromRealm();
+        Observable<Policy> cachedObservable = Observable.empty();
+        if (!allPolicyFromRealm.isEmpty()) {
+            cachedObservable = Observable.fromIterable(allPolicyFromRealm);
+        }
+        Observable.concat(cachedObservable, netWorkObservable)
+                .distinct()
+                .filter(new Predicate<Policy>() {
+                    @Override
+                    public boolean test(@NonNull Policy policy) throws Exception {
+                        return !policy.isExpire();
                     }
                 })
-                .doOnComplete(new Action() {
+                .take(2)
+                .takeUntil(new Predicate<Policy>() {
                     @Override
-                    public void run() throws Exception {
-
+                    public boolean test(@NonNull Policy policy) throws Exception {
+                        return policy.getPolicyNumber().equalsIgnoreCase("7");
                     }
                 })
-                .doOnSubscribe(new Consumer<Disposable>() {
+                .map(new Function<Policy, PolicyViewModel>() {
                     @Override
-                    public void accept(Disposable disposable) throws Exception {
-
+                    public PolicyViewModel apply(@NonNull Policy policy) throws Exception {
+                        PolicyViewModel viewModel = new PolicyViewModel();
+                        viewModel.setPolicyNumber("Number : " + policy.getPolicyNumber());
+                        return viewModel;
                     }
                 })
-                .subscribe();
+                .subscribe(new Consumer<PolicyViewModel>() {
+                    @Override
+                    public void accept(PolicyViewModel viewModel) throws Exception {
+                        Log.d("----->", "" + viewModel.toString());
+                    }
+                });
+//                .toSortedList(new Comparator<PolicyViewModel>() {
+//                    @Override
+//                    public int compare(PolicyViewModel viewModel, PolicyViewModel t1) {
+//                        Log.d("----->", "toSortedList");
+//                        return viewModel.getPolicyNumber().compareTo(t1.getPolicyNumber());
+//                    }
+//                })
+//                .subscribe(new Consumer<List<PolicyViewModel>>() {
+//                    @Override
+//                    public void accept(List<PolicyViewModel> policyViewModels) throws Exception {
+//                        for (PolicyViewModel viewModel : policyViewModels) {
+//                            Log.d("----->", "" + viewModel.toString());
+//                        }
+//                    }
+//                });
+    }
 
-        Observable.just("").subscribe(new Observer<String>() {
+    private void initRealm() {
+        Realm.init(this);
+        RealmConfiguration mRealmConfig = new RealmConfiguration.Builder()
+                .deleteRealmIfMigrationNeeded()
+                .build();
+        Realm.setDefaultConfiguration(mRealmConfig);
+    }
+
+    private Policy writeToRealm(Policy policy) {
+        getRealm().beginTransaction();
+        Policy policyOnRealm = getRealm().copyToRealmOrUpdate(policy);
+        getRealm().commitTransaction();
+        return policyOnRealm;
+    }
+
+    private List<Policy> getAllPolicyFromRealm() {
+        return getRealm().where(Policy.class).findAll();
+    }
+
+    private void removePolicy(Policy policy) {
+        getRealm().beginTransaction();
+        policy.deleteFromRealm();
+        getRealm().commitTransaction();
+    }
+
+    public Realm getRealm() {
+        return realm;
+    }
+
+    private void testGroupBy() {
+        IMockUpService client = MockUpClient.createService();
+        Observable<GroupedObservable<Boolean, Policy>> netWorkObservable = client.getAllPolicy()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Function<List<Policy>, ObservableSource<Policy>>() {
+                    @Override
+                    public ObservableSource<Policy> apply(@NonNull List<Policy> policies) throws Exception {
+                        return Observable.fromIterable(policies);
+                    }
+                })
+                .groupBy(new Function<Policy, Boolean>() {
+                    @Override
+                    public Boolean apply(@NonNull Policy policy) throws Exception {
+                        return policy.isExpire();
+                    }
+                });
+
+        netWorkObservable.subscribe(new Consumer<GroupedObservable<Boolean, Policy>>() {
             @Override
-            public void onSubscribe(@NonNull Disposable d) {
-
-            }
-
-            @Override
-            public void onNext(@NonNull String s) {
-
-            }
-
-            @Override
-            public void onError(@NonNull Throwable e) {
-
-            }
-
-            @Override
-            public void onComplete() {
-
-            }
-        });
-
-
-        Single.just("").subscribe(new SingleObserver<String>() {
-            @Override
-            public void onSubscribe(@NonNull Disposable d) {
-
-            }
-
-            @Override
-            public void onSuccess(@NonNull String s) {
-
-            }
-
-            @Override
-            public void onError(@NonNull Throwable e) {
-
-            }
-        });
-
-        Completable.fromCallable(new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                return "";
-            }
-        }).subscribe(new CompletableObserver() {
-            @Override
-            public void onSubscribe(@NonNull Disposable d) {
-
-            }
-
-            @Override
-            public void onComplete() {
-
-            }
-
-            @Override
-            public void onError(@NonNull Throwable e) {
-
-            }
-        });
-
-        Maybe.just("").subscribe(new MaybeObserver<String>() {
-            @Override
-            public void onSubscribe(@NonNull Disposable d) {
-
-            }
-
-            @Override
-            public void onSuccess(@NonNull String s) {
-
-            }
-
-            @Override
-            public void onError(@NonNull Throwable e) {
-
-            }
-
-            @Override
-            public void onComplete() {
-
+            public void accept(final GroupedObservable<Boolean, Policy> booleanPolicyGroupedObservable) throws Exception {
+                booleanPolicyGroupedObservable.toList().subscribe(new BiConsumer<List<Policy>, Throwable>() {
+                    @Override
+                    public void accept(List<Policy> policies, Throwable throwable) throws Exception {
+                        Log.d("----->", "accept : " + booleanPolicyGroupedObservable.getKey());
+                        for (Policy policy : policies) {
+                            Log.d("----->", "" + policy.toString());
+                        }
+                    }
+                });
             }
         });
 
     }
 
+    private void test1() {
+        Policy policy = new Policy();
+        policy.setPolicyNumber("Empty");
+        List<Policy> allPolicyFromRealm = new ArrayList<>();
+        //List<Policy> allPolicyFromRealm = getAllPolicyFromRealm();
+        Observable.fromIterable(allPolicyFromRealm)
+                .defaultIfEmpty(policy).subscribe(new Consumer<Policy>() {
+            @Override
+            public void accept(Policy policy) throws Exception {
+                Log.d("----->", "" + policy.toString());
+            }
+        });
+
+    }
 }
