@@ -2,14 +2,12 @@ package forallstudio.rxandroid.network;
 
 import java.io.IOException;
 
+import forallstudio.rxandroid.MyApplication;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-
-import static forallstudio.rxandroid.network.FakeResponse.RESPONSE_USER_1;
-import static forallstudio.rxandroid.network.FakeResponse.RESPONSE_USER_2;
 
 public class FakeInterceptor implements Interceptor {
 
@@ -23,9 +21,9 @@ public class FakeInterceptor implements Interceptor {
 
         final String[] parsedQuery = query.split("=");
         if (parsedQuery[0].equalsIgnoreCase("user") && parsedQuery[1].equalsIgnoreCase("1")) {
-            responseString = RESPONSE_USER_1;
+            responseString = MyApplication.RESPONSE_POLICY_1;
         } else if (parsedQuery[0].equalsIgnoreCase("user") && parsedQuery[1].equalsIgnoreCase("2")) {
-            responseString = RESPONSE_USER_2;
+            responseString = MyApplication.RESPONSE_POLICY_2;
         } else {
             responseString = "";
         }
