@@ -36,15 +36,15 @@ public class MainActivity extends AppCompatActivity {
         initRealm();
         realm = Realm.getDefaultInstance();
 
-        //netWorkAndCached();
+        netWorkAndCached();
         //testGroupBy();
-        test1();
+        //test1();
     }
 
     private void netWorkAndCached() {
         IMockUpService client = MockUpClient.createService();
 
-        Observable<Policy> netWorkObservable = client.getAllPolicy()
+        Observable<Policy> netWorkObservable = client.getPoliciesByUser("2")
                 .delay(3, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -73,13 +73,6 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean test(@NonNull Policy policy) throws Exception {
                         return !policy.isExpire();
-                    }
-                })
-                .take(2)
-                .takeUntil(new Predicate<Policy>() {
-                    @Override
-                    public boolean test(@NonNull Policy policy) throws Exception {
-                        return policy.getPolicyNumber().equalsIgnoreCase("7");
                     }
                 })
                 .map(new Function<Policy, PolicyViewModel>() {
@@ -144,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void testGroupBy() {
         IMockUpService client = MockUpClient.createService();
-        Observable<GroupedObservable<Boolean, Policy>> netWorkObservable = client.getAllPolicy()
+        Observable<GroupedObservable<Boolean, Policy>> netWorkObservable = client.getPoliciesByUser("1")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .flatMap(new Function<List<Policy>, ObservableSource<Policy>>() {

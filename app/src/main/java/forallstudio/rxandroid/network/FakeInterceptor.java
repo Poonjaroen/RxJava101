@@ -8,48 +8,34 @@ import okhttp3.Protocol;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-public class FakeInterceptor implements Interceptor {
+import static forallstudio.rxandroid.network.FakeResponse.RESPONSE_USER_1;
+import static forallstudio.rxandroid.network.FakeResponse.RESPONSE_USER_2;
 
-    // FAKE RESPONSES.
-    private final static String RESPONSE = "[\n" +
-            "  {\n" +
-            "    \"policy_number\": \"1\",\n" +
-            "    \"expire\": true\n" +
-            "  },\n" +
-            "  {\n" +
-            "    \"policy_number\": \"7\",\n" +
-            "    \"expire\": false\n" +
-            "  },\n" +
-            "  {\n" +
-            "    \"policy_number\": \"4\",\n" +
-            "    \"expire\": true\n" +
-            "  },\n" +
-            "  {\n" +
-            "    \"policy_number\": \"2\",\n" +
-            "    \"expire\": true\n" +
-            "  },\n" +
-            "  {\n" +
-            "    \"policy_number\": \"5\",\n" +
-            "    \"expire\": false\n" +
-            "  },\n" +
-            "  {\n" +
-            "    \"policy_number\": \"6\",\n" +
-            "    \"expire\": true\n" +
-            "  },\n" +
-            "  {\n" +
-            "    \"policy_number\": \"3\",\n" +
-            "    \"expire\": false\n" +
-            "  }\n" +
-            "]";
+public class FakeInterceptor implements Interceptor {
 
     @Override
     public Response intercept(Chain chain) throws IOException {
+
+        final String query = chain.request().url().query();
+        // Parse the Query String.
+
+        String responseString;
+
+        final String[] parsedQuery = query.split("=");
+        if (parsedQuery[0].equalsIgnoreCase("user") && parsedQuery[1].equalsIgnoreCase("1")) {
+            responseString = RESPONSE_USER_1;
+        } else if (parsedQuery[0].equalsIgnoreCase("user") && parsedQuery[1].equalsIgnoreCase("2")) {
+            responseString = RESPONSE_USER_2;
+        } else {
+            responseString = "";
+        }
+
         Response response = new Response.Builder()
                 .code(200)
-                .message(RESPONSE)
+                .message(responseString)
                 .request(chain.request())
                 .protocol(Protocol.HTTP_1_0)
-                .body(ResponseBody.create(MediaType.parse("application/json"), RESPONSE.getBytes()))
+                .body(ResponseBody.create(MediaType.parse("application/json"), responseString.getBytes()))
                 .addHeader("content-type", "application/json")
                 .build();
         return response;
