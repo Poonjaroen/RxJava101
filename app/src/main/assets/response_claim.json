@@ -1,0 +1,81 @@
+{
+  "claimDetail": [
+    {
+      "claimNumber": "0000120533",
+      "claimClassId": "Baggage Delay",
+      "claimStatus": "Open",
+      "creationDate": "2017-01-27"
+    },
+    {
+      "claimNumber": "0000120534",
+      "claimClassId": "Baggage Delay",
+      "claimStatus": "Open",
+      "creationDate": "2017-01-13"
+    },
+    {
+      "claimNumber": "0000120340",
+      "claimClassId": "Trip Cancellation",
+      "claimStatus": "Open",
+      "creationDate": "2017-02-06"
+    },
+    {
+      "claimNumber": "0000120538",
+      "claimClassId": "Baggage",
+      "claimStatus": "Open",
+      "creationDate": "2017-01-19"
+    },
+    {
+      "claimNumber": "0000120239",
+      "claimClassId": "Trip Cancellation",
+      "claimStatus": "Open",
+      "creationDate": "2017-01-10"
+    },
+    {
+      "claimNumber": "0000120338",
+      "claimClassId": null,
+      "claimStatus": "Open",
+      "creationDate": "2017-02-02"
+    },
+    {
+      "claimNumber": "0000120549",
+      "claimClassId": "Baggage Delay",
+      "claimStatus": "Open",
+      "creationDate": "2017-01-20"
+    },
+    {
+      "claimNumber": "0000120305",
+      "claimClassId": null,
+      "claimStatus": "Open",
+      "creationDate": "2017-01-18"
+    },
+    {
+      "claimNumber": "0000120333",
+      "claimClassId": "Baggage Delay",
+      "claimStatus": "Open",
+      "creationDate": "2017-01-25"
+    },
+    {
+      "claimNumber": "0000120208",
+      "claimClassId": null,
+      "claimStatus": "Open",
+      "creationDate": "2017-01-03"
+    },
+    {
+      "claimNumber": "0000120339",
+      "claimClassId": null,
+      "claimStatus": "Open",
+      "creationDate": "2017-02-06"
+    },
+    {
+      "claimNumber": "0000120320",
+      "claimClassId": null,
+      "claimStatus": "Open",
+      "creationDate": "2017-01-19"
+    }
+  ],
+  "validationResult": {
+    "code": "000",
+    "message": "No error",
+    "timeStamp": "2017-08-23T07:35:31.370Z"
+  }
+}

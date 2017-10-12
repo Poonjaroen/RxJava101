@@ -1,0 +1,13 @@
+{
+  "webuser": [
+    {
+      "firstName": "Jasons",
+      "name": "thies"
+    }
+  ],
+  "validationResult": {
+    "code": "000",
+    "message": "No error",
+    "timeStamp": "2017-09-25T03:50:44.519Z"
+  }
+}

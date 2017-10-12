@@ -3,7 +3,7 @@ package forallstudio.rxandroid.datastore;
 
 import java.util.List;
 
-import forallstudio.rxandroid.entity.Policy;
+import forallstudio.rxandroid.entity.UserPolicy;
 
 public interface IPolicyDiskDataStore {
 
@@ -11,15 +11,15 @@ public interface IPolicyDiskDataStore {
 
     void closeRealm();
 
-    void addPolicy(Policy policy);
+    void addPolicy(UserPolicy userPolicy);
 
-    void addPolicy(List<Policy> policies);
+    void addPolicy(List<UserPolicy> policies);
 
     void deleteAllPolicy();
 
-    void deletePolicy(Policy policy);
+    void deletePolicy(UserPolicy userPolicy);
 
-    Policy getPolicyByPolicyNumber(String policyNumber);
+    UserPolicy getPolicyByPolicyNumber(String policyNumber);
 
-    List<Policy> getAllPolicy();
+    List<UserPolicy> getAllPolicy();
 }

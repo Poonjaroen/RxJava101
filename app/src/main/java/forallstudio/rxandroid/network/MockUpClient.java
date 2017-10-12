@@ -12,7 +12,7 @@ public final class MockUpClient {
     public static IMockUpService createService() {
         if (mRestService == null) {
             final Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl(IMockUpService.ENDPOINT)
+                    .baseUrl(ApiUrl.ENDPOINT)
                     .addConverterFactory(GsonConverterFactory.create())
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .client(getClient())

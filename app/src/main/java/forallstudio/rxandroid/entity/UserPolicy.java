@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-public class Policy extends RealmObject {
+public class UserPolicy extends RealmObject {
 
     @PrimaryKey
     @SerializedName("policy_number")
@@ -32,7 +32,7 @@ public class Policy extends RealmObject {
 
     @Override
     public String toString() {
-        return "Policy{" +
+        return "UserPolicy{" +
                 "policyNumber='" + policyNumber + '\'' +
                 ", isExpire=" + isExpire +
                 '}';
