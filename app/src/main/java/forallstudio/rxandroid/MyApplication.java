@@ -18,8 +18,8 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         Realm.init(this);
-        RESPONSE_POLICY_1 = getContentFromAssert("response_policy_user1");
-        RESPONSE_POLICY_2 = getContentFromAssert("response_policy_user2");
+        RESPONSE_POLICY_1 = getContentFromAssert("response_policy_user1.json");
+        RESPONSE_POLICY_2 = getContentFromAssert("response_policy_user2.json");
     }
 
     private String getContentFromAssert(String fileName) {
